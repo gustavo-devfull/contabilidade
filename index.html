@@ -122,8 +122,6 @@ body{
 .field input:focus{outline:none;border-color:var(--accent);}
 .auth-error{color:var(--critical);font-size:12.5px;margin:2px 0 14px;min-height:1em;}
 .auth-actions button{width:100%;}
-.auth-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:18px;}
-.auth-toggle button{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 /* ---------- hero ---------- */
@@ -235,9 +233,6 @@ footer.note{margin-top:28px;font-size:12px;color:var(--muted);text-align:center;
         <button class="btn primary" type="submit" id="auth-submit">Entrar</button>
       </div>
     </form>
-    <div class="auth-toggle">
-      <span id="auth-toggle-text">Não tem conta?</span> <button type="button" id="auth-toggle-btn">Criar conta</button>
-    </div>
   </div>
 </div>
 
@@ -749,16 +744,6 @@ const AUTH_ERROR_MESSAGES = {
 };
 function authErrorMessage(code){ return AUTH_ERROR_MESSAGES[code] || 'Não foi possível concluir. Tente novamente.'; }
 
-let authMode = 'login';
-function setAuthMode(mode){
-  authMode = mode;
-  document.getElementById('auth-title').textContent = mode==='login' ? 'Entrar' : 'Criar conta';
-  document.getElementById('auth-submit').textContent = mode==='login' ? 'Entrar' : 'Criar conta';
-  document.getElementById('auth-toggle-text').textContent = mode==='login' ? 'Não tem conta?' : 'Já tem conta?';
-  document.getElementById('auth-toggle-btn').textContent = mode==='login' ? 'Criar conta' : 'Entrar';
-  document.getElementById('auth-error').textContent = '';
-}
-
 async function onAuthChanged(user){
   currentUser = user;
   document.getElementById('auth-loading').hidden = true;
@@ -801,7 +786,6 @@ async function initFirebase(){
   }
 }
 
-document.getElementById('auth-toggle-btn').addEventListener('click', ()=> setAuthMode(authMode==='login' ? 'signup' : 'login'));
 document.getElementById('auth-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const email = document.getElementById('auth-email').value.trim();
@@ -811,8 +795,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e)=>{
   errEl.textContent = '';
   btn.disabled = true;
   try{
-    if(authMode==='login') await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, password);
-    else await fbAuthMod.createUserWithEmailAndPassword(fbAuth, email, password);
+    await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, password);
   }catch(err){
     errEl.textContent = authErrorMessage(err && err.code);
   }finally{

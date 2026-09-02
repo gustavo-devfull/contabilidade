@@ -1,0 +1,827 @@
+<title>Patrimônio &amp; Dívidas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f5f6ef;
+  --surface:#ffffff;
+  --surface-2:#ebede1;
+  --ink:#182019;
+  --ink-2:#4c5a4c;
+  --muted:#838c7d;
+  --border:rgba(24,32,25,0.12);
+  --accent:#2f6b4f;
+  --accent-ink:#ffffff;
+  --accent-soft:#e3efe7;
+  --gold:#a5701f;
+  --gold-soft:#f6ecd8;
+  --good:#0ca30c;
+  --critical:#b23a2f;
+  --chart-surface:#fcfcfb;
+  --grid:#e1e0d9;
+  --baseline:#c3c2b7;
+  --s-1:#2a78d6;
+  --s-2:#c85a1e;
+  --s-3:#1baf7a;
+  --s-4:#b5860a;
+  --s-5:#8a63c9;
+  --s-6:#c94f7c;
+  --shadow:0 1px 2px rgba(24,32,25,0.06), 0 8px 24px -12px rgba(24,32,25,0.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10140d;
+    --surface:#171c14;
+    --surface-2:#1e2419;
+    --ink:#eaeee2;
+    --ink-2:#b7c0ac;
+    --muted:#818c76;
+    --border:rgba(234,238,226,0.12);
+    --accent:#74cf9f;
+    --accent-ink:#0d160f;
+    --accent-soft:rgba(116,207,159,0.14);
+    --gold:#e0a94f;
+    --gold-soft:rgba(224,169,79,0.14);
+    --good:#3fc23f;
+    --critical:#e3796c;
+    --chart-surface:#1a1a19;
+    --grid:#2c2c2a;
+    --baseline:#3a3a37;
+    --s-1:#3987e5;
+    --s-2:#e07a3d;
+    --s-3:#2ec98c;
+    --s-4:#d6a428;
+    --s-5:#a48ae0;
+    --s-6:#e177a1;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10140d;
+  --surface:#171c14;
+  --surface-2:#1e2419;
+  --ink:#eaeee2;
+  --ink-2:#b7c0ac;
+  --muted:#818c76;
+  --border:rgba(234,238,226,0.12);
+  --accent:#74cf9f;
+  --accent-ink:#0d160f;
+  --accent-soft:rgba(116,207,159,0.14);
+  --gold:#e0a94f;
+  --gold-soft:rgba(224,169,79,0.14);
+  --good:#3fc23f;
+  --critical:#e3796c;
+  --chart-surface:#1a1a19;
+  --grid:#2c2c2a;
+  --baseline:#3a3a37;
+  --s-1:#3987e5;
+  --s-2:#e07a3d;
+  --s-3:#2ec98c;
+  --s-4:#d6a428;
+  --s-5:#a48ae0;
+  --s-6:#e177a1;
+  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Public Sans", system-ui, -apple-system, sans-serif;
+  font-size:15px;
+  line-height:1.45;
+}
+.app{max-width:1180px;margin:0 auto;padding:20px 20px 64px;}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:4px 2px 20px;flex-wrap:wrap;}
+.topbar h1{font-family:"Fraunces",serif;font-weight:600;font-size:22px;margin:0;letter-spacing:-0.01em;}
+.savebox{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
+.savebox .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background .2s;}
+.savebox[data-state="saved"] .dot{background:var(--good);}
+.savebox[data-state="saving"] .dot{background:var(--gold);animation:pulse 1s infinite;}
+.savebox[data-state="error"] .dot,.savebox[data-state="local"] .dot{background:var(--critical);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(155deg,var(--surface),var(--surface-2));border:1px solid var(--border);border-radius:18px;padding:26px 28px;box-shadow:var(--shadow);margin-bottom:24px;}
+.hero-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.hero-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;}
+.hero-value{font-family:"Fraunces",serif;font-weight:600;font-size:44px;letter-spacing:-0.015em;font-variant-numeric:tabular-nums;line-height:1;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:600;font-family:"IBM Plex Mono",monospace;}
+.badge.up{background:var(--accent-soft);color:var(--good);}
+.badge.down{background:var(--gold-soft);color:var(--critical);}
+.hero-sub{display:flex;gap:28px;margin-top:18px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:16px;}
+.hero-stat .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px;}
+.hero-stat .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums;}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.tab{appearance:none;border:none;background:none;font:inherit;font-weight:600;font-size:14.5px;color:var(--muted);padding:10px 4px;margin-right:22px;cursor:pointer;border-bottom:2px solid transparent;translate:0 1px;}
+.tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ---------- layout blocks ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.kpi .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.kpi .v{font-family:"Fraunces",serif;font-weight:600;font-size:24px;font-variant-numeric:tabular-nums;}
+.kpi .v.gold{color:var(--gold);}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;box-shadow:var(--shadow);}
+.card h2{font-family:"Fraunces",serif;font-size:17px;font-weight:600;margin:0 0 2px;}
+.card .hint{font-size:12.5px;color:var(--muted);margin:0 0 14px;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+
+.chart-wrap{overflow-x:auto;}
+.chart-wrap svg{display:block;min-width:100%;}
+.chart-empty{color:var(--muted);font-size:13px;padding:30px 0;text-align:center;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px;color:var(--ink-2);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+/* ---------- tables ---------- */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table.grid{border-collapse:collapse;width:100%;font-size:13.5px;}
+table.grid th,table.grid td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+table.grid th:first-child,table.grid td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);}
+table.grid thead th{background:var(--surface-2);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2);}
+table.grid tfoot td{font-weight:700;background:var(--surface-2);font-family:"IBM Plex Mono",monospace;}
+table.grid tbody tr:last-child td{border-bottom:none;}
+.cell-input{width:100%;min-width:88px;border:1px solid transparent;background:transparent;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:13px;text-align:right;color:var(--ink);border-radius:6px;padding:4px 6px;}
+.cell-input:hover{border-color:var(--border);}
+.cell-input:focus{border-color:var(--accent);outline:none;background:var(--surface);}
+.name-input{width:100%;min-width:120px;border:1px solid transparent;background:transparent;font:inherit;font-weight:500;font-size:13.5px;text-align:left;color:var(--ink);border-radius:6px;padding:4px 6px;}
+.name-input:hover{border-color:var(--border);}
+.name-input:focus{border-color:var(--accent);outline:none;background:var(--surface);}
+.date-input{border:1px solid transparent;background:transparent;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-2);border-radius:6px;padding:3px 4px;text-align:right;}
+.date-input:hover{border-color:var(--border);}
+.date-input:focus{border-color:var(--accent);outline:none;background:var(--surface);}
+.row-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:4px 6px;border-radius:6px;}
+.row-del:hover{color:var(--critical);background:var(--gold-soft);}
+
+.inst-block{margin-bottom:16px;}
+.inst-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.inst-head .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:8px;}
+.inst-name{display:flex;align-items:center;font-family:"Fraunces",serif;font-weight:600;font-size:15px;}
+.inst-name input{font-family:"Fraunces",serif;font-weight:600;font-size:15px;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:6px;padding:2px 6px;}
+.inst-name input:hover{border-color:var(--border);}
+.inst-name input:focus{border-color:var(--accent);outline:none;background:var(--surface);}
+.inst-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+.btn{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:9px;cursor:pointer;}
+.btn:hover{background:var(--surface-2);}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;}
+.btn.primary:hover{filter:brightness(1.05);}
+.btn.small{padding:5px 10px;font-size:12px;}
+.btn.ghost{border-color:transparent;color:var(--muted);}
+.btn.ghost:hover{color:var(--critical);background:var(--gold-soft);}
+.toolrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+.viz-tooltip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:6px 9px;border-radius:8px;z-index:999;max-width:240px;line-height:1.4;box-shadow:var(--shadow);}
+:root:not([data-theme="light"]) .viz-tooltip{background:var(--surface-2);color:var(--ink);border:1px solid var(--border);}
+:root[data-theme="dark"] .viz-tooltip{background:var(--surface-2);color:var(--ink);border:1px solid var(--border);}
+.viz-tooltip[hidden]{display:none;}
+
+footer.note{margin-top:28px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6;}
+
+@media (max-width:600px){
+  .hero-value{font-size:32px;}
+  .card{padding:16px;}
+}
+</style>
+<div class="app">
+  <div class="topbar">
+    <h1>Patrimônio &amp; Dívidas</h1>
+    <div class="savebox" id="savebox" data-state="saved"><span class="dot"></span><span id="savebox-text">Salvo</span></div>
+  </div>
+
+  <section class="hero" id="hero"></section>
+
+  <nav class="tabs">
+    <button class="tab" data-tab="resumo">Início</button>
+    <button class="tab" data-tab="patrimonio">Patrimônio</button>
+    <button class="tab" data-tab="dividas">Dívidas</button>
+  </nav>
+
+  <main id="app"></main>
+
+  <footer class="note">Dados originados da planilha "Patrimônio e dívidas". Edite valores, datas e nomes diretamente nas tabelas — as alterações são salvas automaticamente.</footer>
+</div>
+<script id="state-data" type="application/json">{"patrimonio":{"datas":["2025-12-03","2026-02-02","2026-04-07","2026-09-02"],"instituicoes":[{"id":"xp","nome":"XP","categorias":[{"nome":"Renda fixa","valores":[569020.63,570574.0,580726.0,562688.0]},{"nome":"Ações","valores":[452268.9,483044.0,463270.0,473772.0]},{"nome":"Fundos Investimentos","valores":[131585.17,134652.0,137055.0,143469.0]},{"nome":"Fundos Imobiliários","valores":[125152.83,138490.0,142462.0,132542.0]},{"nome":"Produtos Estruturados","valores":[23211.32,24184.0,23248.0,26806.0]},{"nome":"Proventos","valores":[2442.8,3668.0,3935.0,3770.0]},{"nome":"Saldo","valores":[241.93,261.92,601.0,2805.0]}]},{"id":"c6","nome":"C6","categorias":[{"nome":"CDB IPCA","valores":[21120.43,21511.46,22072.0,99016.0]},{"nome":"CDB Liq. Diária","valores":[32069.24,32813.3,33608.0,0]},{"nome":"FII KNCR11","valores":[21978.6,22239.0,22678.0,23525.0]}]},{"id":"nu","nome":"Nu","categorias":[{"nome":"Ações CXSE3","valores":[11168.88,11978.52,12995.0,54380.0]}]},{"id":"santander","nome":"Santander","categorias":[{"nome":"CDB","valores":[59849.75,61227.0,62699.0,65445.0]}]}],"imoveis":[{"nome":"Casa Buona","valor":1200000},{"nome":"Studio","valor":200000},{"nome":"Outlander","valor":50000}]},"dividas":{"cartao":{"nome":"Cartão C6","parcelas":[{"valor":12820,"vencimento":"2026-10-01"},{"valor":1312,"vencimento":"2026-11-01"},{"valor":1153,"vencimento":"2026-12-01"},{"valor":383,"vencimento":"2027-01-01"},{"valor":252,"vencimento":"2027-02-01"},{"valor":252,"vencimento":"2027-03-01"},{"valor":252,"vencimento":"2027-04-01"},{"valor":149,"vencimento":"2027-05-01"},{"valor":130,"vencimento":"2027-06-01"}]},"categorias":[{"nome":"Atividades dos filhos","itens":[{"nome":"Karatê","valor":400},{"nome":"Ballet/Jazz","valor":387},{"nome":"Tênis","valor":200},{"nome":"Reforço","valor":560},{"nome":"Maple Bear","valor":3300},{"nome":"Conexão","valor":2000}]},{"nome":"Despesas domésticas","itens":[{"nome":"Empregada","valor":2500},{"nome":"CPFL","valor":400},{"nome":"DAAE","valor":200},{"nome":"Internet","valor":160},{"nome":"Piscineiro","valor":180}]}]},"meta":{"savedAt":null,"ui":{"tab":"resumo"}}}</script>
+<script>
+(function(){
+"use strict";
+const SELF_SCRIPT_SOURCE = document.currentScript.textContent;
+const PAGE_TITLE = "Patrimônio & Dívidas";
+const FONT_LINKS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">';
+
+/* ---------------- state ---------------- */
+const seedEl = document.getElementById('state-data');
+let state = JSON.parse(seedEl.textContent);
+if(!state.meta) state.meta = {savedAt:null, ui:{tab:'patrimonio'}};
+if(!state.meta.ui) state.meta.ui = {tab:'resumo'};
+
+try{
+  const raw = localStorage.getItem('patrimonio-dashboard-state-v1');
+  if(raw){
+    const local = JSON.parse(raw);
+    const localTs = local && local.meta && local.meta.savedAt;
+    const seedTs = state.meta.savedAt;
+    if(localTs && (!seedTs || localTs > seedTs)) state = local;
+  }
+}catch(e){}
+
+const SERIES_VARS = ['--s-1','--s-2','--s-3','--s-4','--s-5','--s-6'];
+function seriesColor(i){ return `var(${SERIES_VARS[i % SERIES_VARS.length]})`; }
+
+/* ---------------- formatting ---------------- */
+const currencyFmt = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const currencyFmt2 = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2});
+function fmtBRL(v){ return currencyFmt.format(Number(v)||0); }
+function fmtBRL2(v){ return currencyFmt2.format(Number(v)||0); }
+function fmtPct(v){ if(v===null||v===undefined||!isFinite(v)) return '—'; return (v*100).toLocaleString('pt-BR',{maximumFractionDigits:1,minimumFractionDigits:1})+'%'; }
+const MONTHS_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function fmtDateShort(iso){ if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return '—'; return `${MONTHS_PT[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`; }
+function fmtDateFull(iso){ if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return '—'; return d.toLocaleDateString('pt-BR'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------------- computed values ---------------- */
+function instTotal(inst, dateIdx){ return inst.categorias.reduce((s,c)=> s+(Number(c.valores[dateIdx])||0),0); }
+function investTotal(dateIdx){ return state.patrimonio.instituicoes.reduce((s,i)=> s+instTotal(i,dateIdx),0); }
+function imoveisTotal(){ return state.patrimonio.imoveis.reduce((s,i)=> s+(Number(i.valor)||0),0); }
+function cartaoTotal(){ return state.dividas.cartao.parcelas.reduce((s,p)=> s+(Number(p.valor)||0),0); }
+function categoriaTotal(cat){ return cat.itens.reduce((s,i)=> s+(Number(i.valor)||0),0); }
+function despesasTotal(){ return state.dividas.categorias.reduce((s,c)=> s+categoriaTotal(c),0); }
+function lastInvestTotal(){ const n=state.patrimonio.datas.length; return n? investTotal(n-1):0; }
+function patrimonioBruto(){ return imoveisTotal()+lastInvestTotal(); }
+function patrimonioLiquido(){ return patrimonioBruto()-cartaoTotal(); }
+function growthAt(dateIdx){
+  if(dateIdx<=0) return null;
+  const prev=investTotal(dateIdx-1), cur=investTotal(dateIdx);
+  if(!prev) return null;
+  return (cur-prev)/prev;
+}
+function lastGrowth(){ const n=state.patrimonio.datas.length; return n>1? growthAt(n-1):null; }
+function catVariacao(cat){
+  const vals = cat.valores.map(v=>Number(v)||0);
+  if(vals.length<2) return null;
+  const first = vals[0], last = vals[vals.length-1];
+  if(!first) return null;
+  return (last-first)/first;
+}
+
+/* ---------------- charts ---------------- */
+function svgOpen(w,h){ return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img">`; }
+
+function buildEvolucaoChart(){
+  const pts = state.patrimonio.datas.map((d,i)=>({date:d, value:investTotal(i)}))
+    .filter(p=>p.date && !isNaN(new Date(p.date+'T00:00:00')))
+    .sort((a,b)=> new Date(a.date)-new Date(b.date));
+  if(pts.length===0) return '<p class="chart-empty">Adicione ao menos uma data para ver a evolução.</p>';
+  const W=740,H=260,padL=68,padR=20,padT=20,padB=36;
+  const xs = pts.map(p=> new Date(p.date+'T00:00:00').getTime());
+  const minX=Math.min(...xs), maxX=Math.max(...xs), span=Math.max(maxX-minX,1);
+  const maxY = Math.max(...pts.map(p=>p.value),1)*1.18;
+  const x = t => pts.length===1 ? (padL+(W-padL-padR)/2) : padL+((t-minX)/span)*(W-padL-padR);
+  const y = v => H-padB-(v/maxY)*(H-padT-padB);
+  let grid='';
+  for(let g=0; g<=3; g++){
+    const gv = maxY*g/3; const gy=y(gv);
+    grid += `<line x1="${padL}" x2="${W-padR}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="var(--grid)" stroke-width="1"></line>`;
+    grid += `<text x="${padL-10}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${fmtBRL(gv).replace('R$','').trim()}</text>`;
+  }
+  const linePts = pts.map((p,i)=> `${x(xs[i]).toFixed(1)},${y(p.value).toFixed(1)}`);
+  const linePath = linePts.map((p,i)=> (i===0?'M ':'L ')+p).join(' ');
+  const areaPath = `${linePath} L ${x(xs[xs.length-1]).toFixed(1)},${(H-padB).toFixed(1)} L ${x(xs[0]).toFixed(1)},${(H-padB).toFixed(1)} Z`;
+  let dots='', labels='';
+  pts.forEach((p,i)=>{
+    const cx=x(xs[i]), cy=y(p.value);
+    const isEnd = i===0 || i===pts.length-1;
+    dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${isEnd?5:4}" fill="var(--accent)" stroke="var(--chart-surface)" stroke-width="2"></circle>`;
+    dots += `<circle class="hit" data-tip="${esc(fmtDateFull(p.date))}: ${esc(fmtBRL2(p.value))}" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="14" fill="transparent"></circle>`;
+    labels += `<text x="${cx.toFixed(1)}" y="${(H-padB+20).toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(fmtDateShort(p.date))}</text>`;
+    if(isEnd){
+      const dy = i===0 ? -14 : -14;
+      labels += `<text x="${cx.toFixed(1)}" y="${(cy+dy).toFixed(1)}" text-anchor="${i===0?'start':'end'}" font-size="12" font-weight="600" fill="var(--ink)" font-family="IBM Plex Mono, monospace">${esc(fmtBRL(p.value))}</text>`;
+    }
+  });
+  return `<div class="chart-wrap">${svgOpen(W,H)}
+    <defs><linearGradient id="evoFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"></stop>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"></stop>
+    </linearGradient></defs>
+    ${grid}
+    <line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"></line>
+    <path d="${areaPath}" fill="url(#evoFill)"></path>
+    <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>
+    ${dots}
+    ${labels}
+  </svg></div>`;
+}
+
+function buildComposicaoChart(){
+  const insts = state.patrimonio.instituicoes;
+  const dates = state.patrimonio.datas;
+  if(!dates.length || !insts.length) return '<p class="chart-empty">Adicione instituições e datas para ver a composição.</p>';
+  const padL=68,padR=20,padT=16,padB=36;
+  const groupW = 128;
+  const W = Math.max(560, padL+padR+dates.length*groupW), H=280;
+  const totals = dates.map((d,i)=>investTotal(i));
+  const maxTotal = Math.max(...totals,1)*1.12;
+  const barW = Math.min(64, groupW*0.5);
+  let grid='';
+  for(let g=0; g<=3; g++){
+    const gv=maxTotal*g/3; const gy = H-padB-(gv/maxTotal)*(H-padT-padB);
+    grid += `<line x1="${padL}" x2="${W-padR}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="var(--grid)" stroke-width="1"></line>`;
+    grid += `<text x="${padL-10}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${fmtBRL(gv).replace('R$','').trim()}</text>`;
+  }
+  let bars='', labels='';
+  dates.forEach((d,di)=>{
+    const gx = padL + groupW*di + groupW/2 - barW/2;
+    let yCursor = H-padB;
+    const visible = insts.map((inst,ii)=>({inst,ii,v:instTotal(inst,di)})).filter(o=>o.v>0);
+    visible.forEach((o,vi)=>{
+      const h = (o.v/maxTotal)*(H-padT-padB);
+      const segH = Math.max(h-(vi<visible.length-1?2:0),0);
+      const isTop = vi===visible.length-1;
+      yCursor -= h;
+      bars += `<rect data-tip="${esc(o.inst.nome)} — ${esc(fmtDateShort(d))}: ${esc(fmtBRL2(o.v))}" x="${gx.toFixed(1)}" y="${yCursor.toFixed(1)}" width="${barW}" height="${segH.toFixed(1)}" fill="${seriesColor(o.ii)}" rx="${isTop?4:0}" ry="${isTop?4:0}"></rect>`;
+    });
+    labels += `<text x="${(gx+barW/2).toFixed(1)}" y="${(H-padB+20).toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(fmtDateShort(d))}</text>`;
+    labels += `<text x="${(gx+barW/2).toFixed(1)}" y="${(H-padB-Math.max((totals[di]/maxTotal)*(H-padT-padB),0)-8).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)" font-family="IBM Plex Mono, monospace">${esc(fmtBRL(totals[di]))}</text>`;
+  });
+  return `<div class="chart-wrap">${svgOpen(W,H)}
+    ${grid}
+    <line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"></line>
+    ${bars}
+    ${labels}
+  </svg></div>`;
+}
+
+function buildComposicaoLegend(){
+  return `<div class="legend">${state.patrimonio.instituicoes.map((inst,i)=>
+    `<span><i style="background:${seriesColor(i)}"></i>${esc(inst.nome)}</span>`).join('')}</div>`;
+}
+
+function buildParcelasChart(){
+  const parcelas = state.dividas.cartao.parcelas
+    .map((p,idx)=>({...p, idx}))
+    .filter(p=>p.vencimento && !isNaN(new Date(p.vencimento+'T00:00:00')))
+    .sort((a,b)=> new Date(a.vencimento)-new Date(b.vencimento));
+  if(!parcelas.length) return '<p class="chart-empty">Adicione parcelas com data de vencimento para ver o gráfico.</p>';
+  const padL=68,padR=20,padT=24,padB=40;
+  const groupW=70;
+  const W=Math.max(560,padL+padR+parcelas.length*groupW), H=240;
+  const maxV = Math.max(...parcelas.map(p=>Number(p.valor)||0),1)*1.2;
+  const barW = Math.min(36,groupW*0.55);
+  let grid='';
+  for(let g=0; g<=3; g++){
+    const gv=maxV*g/3; const gy=H-padB-(gv/maxV)*(H-padT-padB);
+    grid += `<line x1="${padL}" x2="${W-padR}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="var(--grid)" stroke-width="1"></line>`;
+  }
+  let bars='',labels='';
+  parcelas.forEach((p,i)=>{
+    const gx = padL+groupW*i+groupW/2-barW/2;
+    const v = Number(p.valor)||0;
+    const h = (v/maxV)*(H-padT-padB);
+    const y0 = H-padB-h;
+    bars += `<rect data-tip="${esc(fmtDateFull(p.vencimento))}: ${esc(fmtBRL2(v))}" x="${gx.toFixed(1)}" y="${y0.toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" fill="var(--gold)" rx="4" ry="4"></rect>`;
+    labels += `<text x="${(gx+barW/2).toFixed(1)}" y="${(H-padB+18).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(fmtDateShort(p.vencimento))}</text>`;
+    if(i===0 || i===parcelas.length-1){
+      labels += `<text x="${(gx+barW/2).toFixed(1)}" y="${(y0-8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)" font-family="IBM Plex Mono, monospace">${esc(fmtBRL(v))}</text>`;
+    }
+  });
+  return `<div class="chart-wrap">${svgOpen(W,H)}
+    ${grid}
+    <line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"></line>
+    ${bars}
+    ${labels}
+  </svg></div>`;
+}
+
+/* ---------------- render: hero ---------------- */
+function renderHero(){
+  const liquido = patrimonioLiquido();
+  const g = lastGrowth();
+  const badge = g===null ? '' : `<span class="badge ${g>=0?'up':'down'}">${g>=0?'▲':'▼'} ${fmtPct(Math.abs(g))} no período</span>`;
+  document.getElementById('hero').innerHTML = `
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">Patrimônio líquido</div>
+        <div class="hero-value">${fmtBRL(liquido)}</div>
+      </div>
+      ${badge}
+    </div>
+    <div class="hero-sub">
+      <div class="hero-stat"><div class="k">Investimentos</div><div class="v">${fmtBRL(lastInvestTotal())}</div></div>
+      <div class="hero-stat"><div class="k">Imóveis</div><div class="v">${fmtBRL(imoveisTotal())}</div></div>
+      <div class="hero-stat"><div class="k">Dívida cartão</div><div class="v" style="color:var(--gold)">${fmtBRL(cartaoTotal())}</div></div>
+      <div class="hero-stat"><div class="k">Despesas fixas / mês</div><div class="v" style="color:var(--gold)">${fmtBRL(despesasTotal())}</div></div>
+    </div>`;
+}
+
+/* ---------------- render: resumo tab ---------------- */
+function renderResumoTab(){
+  const p = state.patrimonio;
+  const n = p.datas.length;
+  const lastIdx = n-1;
+  const rows = p.instituicoes.map((inst,ii)=>{
+    const v = n? instTotal(inst,lastIdx) : 0;
+    return `<tr>
+      <td><span class="swatch" style="background:${seriesColor(ii)};width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;"></span>${esc(inst.nome)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-weight:600;">${fmtBRL(v)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h2>Investimentos por instituição</h2><p class="hint">Saldo mais recente${n?` — ${esc(fmtDateFull(p.datas[lastIdx]))}`:''}</p></div></div>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Instituição</th><th>Valor</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="2" style="text-align:center;color:var(--muted)">Nenhuma instituição cadastrada</td></tr>`}</tbody>
+        <tfoot><tr><td>Total</td><td>${fmtBRL(n?investTotal(lastIdx):0)}</td></tr></tfoot>
+      </table></div>
+    </div>
+  `;
+}
+
+/* ---------------- render: patrimonio tab ---------------- */
+function renderPatrimonioTab(){
+  const p = state.patrimonio;
+  const n = p.datas.length;
+  const dateHeaders = p.datas.map((d,i)=> `<th>
+      <input class="date-input" type="date" value="${esc(d)}" data-action="date" data-idx="${i}">
+      <button class="row-del" data-action="del-date" data-idx="${i}" title="Remover esta data">×</button>
+    </th>`).join('');
+
+  const instBlocks = p.instituicoes.map((inst,ii)=>{
+    const rows = inst.categorias.map((cat,ci)=>{
+      const v = catVariacao(cat);
+      const varClass = v===null ? '' : (v>=0?'':' style="color:var(--critical)"');
+      return `<tr>
+        <td><input class="name-input" value="${esc(cat.nome)}" data-action="cat-nome" data-inst="${ii}" data-cat="${ci}"></td>
+        ${p.datas.map((d,di)=> `<td><input class="cell-input" inputmode="decimal" value="${cat.valores[di]??0}" data-action="valor" data-inst="${ii}" data-cat="${ci}" data-date="${di}"></td>`).join('')}
+        <td id="cat-var-${ii}-${ci}" style="font-family:'IBM Plex Mono',monospace;"${varClass}>${v===null?'—':(v>=0?'▲ ':'▼ ')+fmtPct(Math.abs(v))}</td>
+        <td><button class="row-del" data-action="del-cat" data-inst="${ii}" data-cat="${ci}" title="Remover categoria">×</button></td>
+      </tr>`;
+    }).join('');
+    return `<div class="inst-block">
+      <div class="inst-head">
+        <div class="inst-name"><span class="swatch" style="background:${seriesColor(ii)}"></span><input value="${esc(inst.nome)}" data-action="inst-nome" data-inst="${ii}"></div>
+        <div class="inst-actions">
+          <button class="btn small" data-action="add-cat" data-inst="${ii}">+ Categoria</button>
+          <button class="btn small ghost" data-action="del-inst" data-inst="${ii}">Remover instituição</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Categoria</th>${p.datas.map(d=>`<th>${esc(fmtDateShort(d))}</th>`).join('')}<th>Variação</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="${n+3}" style="text-align:center;color:var(--muted)">Sem categorias</td></tr>`}</tbody>
+        <tfoot><tr><td>Total ${esc(inst.nome)}</td>${p.datas.map((d,di)=> `<td id="inst-total-${ii}-${di}">${fmtBRL(instTotal(inst,di))}</td>`).join('')}<td></td><td></td></tr></tfoot>
+      </table></div>
+    </div>`;
+  }).join('');
+
+  const imoveisRows = p.imoveis.map((im,i)=> `<tr>
+      <td><input class="name-input" value="${esc(im.nome)}" data-action="imovel-nome" data-idx="${i}"></td>
+      <td><input class="cell-input" inputmode="decimal" value="${im.valor??0}" data-action="imovel-valor" data-idx="${i}"></td>
+      <td><button class="row-del" data-action="del-imovel" data-idx="${i}" title="Remover">×</button></td>
+    </tr>`).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="k">Total investido (${n?esc(fmtDateShort(p.datas[n-1])):'—'})</div><div class="v">${fmtBRL(lastInvestTotal())}</div></div>
+      <div class="kpi"><div class="k">Ativos imobiliários</div><div class="v">${fmtBRL(imoveisTotal())}</div></div>
+      <div class="kpi"><div class="k">Patrimônio bruto</div><div class="v">${fmtBRL(patrimonioBruto())}</div></div>
+      <div class="kpi"><div class="k">Variação último período</div><div class="v ${lastGrowth()!==null && lastGrowth()<0 ? 'gold':''}">${fmtPct(lastGrowth())}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Evolução dos investimentos</h2><p class="hint">Soma de todas as instituições em cada data registrada</p></div></div>
+      <div id="chart-evolucao">${buildEvolucaoChart()}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Composição por instituição</h2><p class="hint">Distribuição do total investido a cada data</p></div></div>
+      <div id="chart-composicao">${buildComposicaoChart()}</div>
+      <div id="legend-composicao">${buildComposicaoLegend()}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Ativos imobiliários</h2><p class="hint">Valor patrimonial atual de cada imóvel</p></div></div>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Imóvel</th><th>Valor</th><th></th></tr></thead>
+        <tbody>${imoveisRows || `<tr><td colspan="3" style="text-align:center;color:var(--muted)">Nenhum imóvel cadastrado</td></tr>`}</tbody>
+        <tfoot><tr><td>Total</td><td id="imoveis-total">${fmtBRL(imoveisTotal())}</td><td></td></tr></tfoot>
+      </table></div>
+      <div class="toolrow"><button class="btn small" data-action="add-imovel">+ Imóvel</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Investimentos por instituição</h2><p class="hint">Edite valores por data, adicione categorias, instituições ou novas datas</p></div></div>
+      <div class="toolrow" style="margin-top:0;margin-bottom:16px;">
+        <button class="btn small" data-action="add-date">+ Nova data</button>
+        <button class="btn small" data-action="add-inst">+ Instituição</button>
+      </div>
+      ${instBlocks || `<p class="chart-empty">Nenhuma instituição cadastrada.</p>`}
+    </div>
+  `;
+}
+
+/* ---------------- render: dividas tab ---------------- */
+function renderDividasTab(){
+  const dv = state.dividas;
+  const parcRows = dv.cartao.parcelas.map((p,i)=> `<tr>
+      <td><input class="cell-input" inputmode="decimal" value="${p.valor??0}" data-action="parc-valor" data-idx="${i}"></td>
+      <td><input class="date-input" type="date" value="${esc(p.vencimento||'')}" data-action="parc-venc" data-idx="${i}"></td>
+      <td><button class="row-del" data-action="del-parc" data-idx="${i}" title="Remover">×</button></td>
+    </tr>`).join('');
+
+  const catBlocks = dv.categorias.map((cat,ci)=>{
+    const rows = cat.itens.map((it,ii)=> `<tr>
+        <td><input class="name-input" value="${esc(it.nome)}" data-action="item-nome" data-cat="${ci}" data-item="${ii}"></td>
+        <td><input class="cell-input" inputmode="decimal" value="${it.valor??0}" data-action="item-valor" data-cat="${ci}" data-item="${ii}"></td>
+        <td><button class="row-del" data-action="del-item" data-cat="${ci}" data-item="${ii}" title="Remover">×</button></td>
+      </tr>`).join('');
+    return `<div class="inst-block">
+      <div class="inst-head">
+        <div class="inst-name"><span class="swatch" style="background:${seriesColor(ci+1)}"></span><input value="${esc(cat.nome)}" data-action="cat2-nome" data-cat="${ci}"></div>
+        <div class="inst-actions">
+          <button class="btn small" data-action="add-item" data-cat="${ci}">+ Item</button>
+          <button class="btn small ghost" data-action="del-cat2" data-cat="${ci}">Remover categoria</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Item</th><th>Valor mensal</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="3" style="text-align:center;color:var(--muted)">Sem itens</td></tr>`}</tbody>
+        <tfoot><tr><td>Total ${esc(cat.nome)}</td><td id="cat2-total-${ci}">${fmtBRL(categoriaTotal(cat))}</td><td></td></tr></tfoot>
+      </table></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="k">Saldo devedor cartão</div><div class="v gold">${fmtBRL(cartaoTotal())}</div></div>
+      <div class="kpi"><div class="k">Despesas fixas / mês</div><div class="v gold">${fmtBRL(despesasTotal())}</div></div>
+      <div class="kpi"><div class="k">Próxima parcela</div><div class="v">${dv.cartao.parcelas.length? fmtBRL(dv.cartao.parcelas.slice().filter(p=>p.vencimento).sort((a,b)=>new Date(a.vencimento)-new Date(b.vencimento))[0]?.valor||0) : '—'}</div></div>
+      <div class="kpi"><div class="k">Total comprometido</div><div class="v gold">${fmtBRL(cartaoTotal()+despesasTotal())}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Parcelas — ${esc(dv.cartao.nome)}</h2><p class="hint">Valor restante por vencimento</p></div></div>
+      <div id="chart-parcelas">${buildParcelasChart()}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>${esc(dv.cartao.nome)}</h2><p class="hint">Cronograma de parcelas em aberto</p></div></div>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Valor</th><th>Vencimento</th><th></th></tr></thead>
+        <tbody>${parcRows || `<tr><td colspan="3" style="text-align:center;color:var(--muted)">Nenhuma parcela cadastrada</td></tr>`}</tbody>
+        <tfoot><tr><td>Total</td><td id="cartao-total">${fmtBRL(cartaoTotal())}</td><td></td></tr></tfoot>
+      </table></div>
+      <div class="toolrow"><button class="btn small" data-action="add-parc">+ Parcela</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Despesas fixas mensais</h2><p class="hint">Atividades, escola e contas recorrentes</p></div></div>
+      <div class="toolrow" style="margin-top:0;margin-bottom:16px;">
+        <button class="btn small" data-action="add-cat2">+ Categoria de despesa</button>
+      </div>
+      ${catBlocks || `<p class="chart-empty">Nenhuma categoria cadastrada.</p>`}
+    </div>
+  `;
+}
+
+/* ---------------- top-level render ---------------- */
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.tab===state.meta.ui.tab);
+  });
+}
+function render(){
+  renderHero();
+  renderTabs();
+  const tab = state.meta.ui.tab;
+  if(tab==='dividas') renderDividasTab();
+  else if(tab==='patrimonio') renderPatrimonioTab();
+  else renderResumoTab();
+}
+
+/* lightweight recompute after a plain value/name edit: refresh hero, totals, charts — never rebuilds inputs */
+function refreshComputed(){
+  renderHero();
+  const tab = state.meta.ui.tab;
+  if(tab==='patrimonio'){
+    const p = state.patrimonio;
+    p.instituicoes.forEach((inst,ii)=>{
+      inst.categorias.forEach((cat,ci)=>{
+        const el = document.getElementById(`cat-var-${ii}-${ci}`);
+        if(el){
+          const v = catVariacao(cat);
+          el.textContent = v===null?'—':(v>=0?'▲ ':'▼ ')+fmtPct(Math.abs(v));
+          el.style.color = v===null||v>=0 ? '' : 'var(--critical)';
+        }
+      });
+      p.datas.forEach((d,di)=>{
+        const el = document.getElementById(`inst-total-${ii}-${di}`);
+        if(el) el.textContent = fmtBRL(instTotal(inst,di));
+      });
+    });
+    const imTotalEl = document.getElementById('imoveis-total');
+    if(imTotalEl) imTotalEl.textContent = fmtBRL(imoveisTotal());
+    const evoEl = document.getElementById('chart-evolucao');
+    if(evoEl) evoEl.innerHTML = buildEvolucaoChart();
+    const compEl = document.getElementById('chart-composicao');
+    if(compEl) compEl.innerHTML = buildComposicaoChart();
+    const legEl = document.getElementById('legend-composicao');
+    if(legEl) legEl.innerHTML = buildComposicaoLegend();
+  } else {
+    const dv = state.dividas;
+    dv.categorias.forEach((cat,ci)=>{
+      const el = document.getElementById(`cat2-total-${ci}`);
+      if(el) el.textContent = fmtBRL(categoriaTotal(cat));
+    });
+    const cartaoEl = document.getElementById('cartao-total');
+    if(cartaoEl) cartaoEl.textContent = fmtBRL(cartaoTotal());
+    const parcEl = document.getElementById('chart-parcelas');
+    if(parcEl) parcEl.innerHTML = buildParcelasChart();
+  }
+}
+
+/* ---------------- persistence ---------------- */
+let artifactCap = null;
+let capResolved = false;
+if(typeof window.claude !== 'undefined' && typeof window.claude.use === 'function'){
+  window.claude.use('artifact').then(cap=>{ artifactCap = cap; capResolved = true; }).catch(()=>{ capResolved = true; });
+} else { capResolved = true; }
+
+function saveLocal(){ try{ localStorage.setItem('patrimonio-dashboard-state-v1', JSON.stringify(state)); }catch(e){} }
+
+function buildFullDocument(st){
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${PAGE_TITLE}</title>
+${FONT_LINKS}
+<style>${document.querySelector('style').textContent}</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1>Patrimônio &amp; Dívidas</h1>
+    <div class="savebox" id="savebox" data-state="saved"><span class="dot"></span><span id="savebox-text">Salvo</span></div>
+  </div>
+  <section class="hero" id="hero"></section>
+  <nav class="tabs">
+    <button class="tab" data-tab="resumo">Início</button>
+    <button class="tab" data-tab="patrimonio">Patrimônio</button>
+    <button class="tab" data-tab="dividas">Dívidas</button>
+  </nav>
+  <main id="app"></main>
+  <footer class="note">Dados originados da planilha "Patrimônio e dívidas". Edite valores, datas e nomes diretamente nas tabelas — as alterações são salvas automaticamente.</footer>
+</div>
+<script id="state-data" type="application/json">${JSON.stringify(st)}<\/script>
+<script>${SELF_SCRIPT_SOURCE}<\/script>
+</body>
+</html>`;
+}
+
+let saveTimer = null;
+function setSaveState(mode){
+  const box = document.getElementById('savebox');
+  const txt = document.getElementById('savebox-text');
+  if(!box) return;
+  box.dataset.state = mode;
+  txt.textContent = mode==='saving' ? 'Salvando…' : mode==='saved' ? 'Salvo' : mode==='local' ? 'Salvo neste navegador' : 'Erro ao salvar';
+}
+function scheduleSave(){
+  setSaveState('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 900);
+}
+async function doSave(){
+  state.meta.savedAt = new Date().toISOString();
+  if(artifactCap){
+    try{
+      await artifactCap.publish(buildFullDocument(state));
+      return; /* view reloads on success */
+    }catch(err){
+      const code = err && err.code;
+      if(code==='conflict') return;
+      if(code==='not_writer' || code==='not_granted' || code==='capability_disabled' || code==='not_declared'){
+        artifactCap = null;
+        saveLocal();
+        setSaveState('local');
+        return;
+      }
+      saveLocal();
+      setSaveState('error');
+      return;
+    }
+  }
+  saveLocal();
+  setSaveState(capResolved ? 'local' : 'saved');
+}
+
+/* ---------------- events ---------------- */
+function onTabClick(e){
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  state.meta.ui.tab = btn.dataset.tab;
+  render();
+}
+
+function onInput(e){
+  const t = e.target;
+  const action = t.dataset.action;
+  if(!action) return;
+  const p = state.patrimonio, dv = state.dividas;
+  switch(action){
+    case 'valor': p.instituicoes[+t.dataset.inst].categorias[+t.dataset.cat].valores[+t.dataset.date] = parseFloat(t.value)||0; break;
+    case 'cat-nome': p.instituicoes[+t.dataset.inst].categorias[+t.dataset.cat].nome = t.value; return refreshComputed(), scheduleSave();
+    case 'inst-nome': p.instituicoes[+t.dataset.inst].nome = t.value; break;
+    case 'date': p.datas[+t.dataset.idx] = t.value; break;
+    case 'imovel-nome': p.imoveis[+t.dataset.idx].nome = t.value; break;
+    case 'imovel-valor': p.imoveis[+t.dataset.idx].valor = parseFloat(t.value)||0; break;
+    case 'parc-valor': dv.cartao.parcelas[+t.dataset.idx].valor = parseFloat(t.value)||0; break;
+    case 'parc-venc': dv.cartao.parcelas[+t.dataset.idx].vencimento = t.value; break;
+    case 'item-nome': dv.categorias[+t.dataset.cat].itens[+t.dataset.item].nome = t.value; break;
+    case 'item-valor': dv.categorias[+t.dataset.cat].itens[+t.dataset.item].valor = parseFloat(t.value)||0; break;
+    case 'cat2-nome': dv.categorias[+t.dataset.cat].nome = t.value; break;
+    default: return;
+  }
+  refreshComputed();
+  scheduleSave();
+}
+
+function onClick(e){
+  const btn = e.target.closest('[data-action]');
+  if(!btn || btn.tagName!=='BUTTON') return;
+  const action = btn.dataset.action;
+  const p = state.patrimonio, dv = state.dividas;
+  let structural = true;
+  switch(action){
+    case 'add-date': {
+      p.datas.push('');
+      p.instituicoes.forEach(inst=> inst.categorias.forEach(c=> c.valores.push(0)));
+      break;
+    }
+    case 'del-date': {
+      const idx = +btn.dataset.idx;
+      if(!confirm('Remover esta data de todas as instituições?')) return;
+      p.datas.splice(idx,1);
+      p.instituicoes.forEach(inst=> inst.categorias.forEach(c=> c.valores.splice(idx,1)));
+      break;
+    }
+    case 'add-inst': p.instituicoes.push({id:'inst-'+Date.now(), nome:'Nova instituição', categorias:[{nome:'Nova categoria', valores:p.datas.map(()=>0)}]}); break;
+    case 'del-inst': {
+      if(!confirm('Remover esta instituição e todas as suas categorias?')) return;
+      p.instituicoes.splice(+btn.dataset.inst,1);
+      break;
+    }
+    case 'add-cat': p.instituicoes[+btn.dataset.inst].categorias.push({nome:'Nova categoria', valores:p.datas.map(()=>0)}); break;
+    case 'del-cat': p.instituicoes[+btn.dataset.inst].categorias.splice(+btn.dataset.cat,1); break;
+    case 'add-imovel': p.imoveis.push({nome:'Novo imóvel', valor:0}); break;
+    case 'del-imovel': p.imoveis.splice(+btn.dataset.idx,1); break;
+    case 'add-parc': dv.cartao.parcelas.push({valor:0, vencimento:''}); break;
+    case 'del-parc': dv.cartao.parcelas.splice(+btn.dataset.idx,1); break;
+    case 'add-cat2': dv.categorias.push({nome:'Nova categoria', itens:[]}); break;
+    case 'del-cat2': {
+      if(!confirm('Remover esta categoria de despesa e todos os seus itens?')) return;
+      dv.categorias.splice(+btn.dataset.cat,1);
+      break;
+    }
+    case 'add-item': dv.categorias[+btn.dataset.cat].itens.push({nome:'Novo item', valor:0}); break;
+    case 'del-item': dv.categorias[+btn.dataset.cat].itens[+btn.dataset.item] && dv.categorias[+btn.dataset.cat].itens.splice(+btn.dataset.item,1); break;
+    default: structural = false;
+  }
+  if(structural){ render(); scheduleSave(); }
+}
+
+document.addEventListener('click', e=>{ onTabClick(e); onClick(e); });
+document.addEventListener('input', onInput);
+
+/* ---------------- tooltip ---------------- */
+const tooltip = document.createElement('div');
+tooltip.className = 'viz-tooltip';
+tooltip.hidden = true;
+document.body.appendChild(tooltip);
+document.addEventListener('pointermove', e=>{
+  const hit = e.target.closest('[data-tip]');
+  if(hit){
+    tooltip.textContent = hit.getAttribute('data-tip');
+    tooltip.style.left = (e.clientX+14)+'px';
+    tooltip.style.top = (e.clientY+14)+'px';
+    tooltip.hidden = false;
+  } else {
+    tooltip.hidden = true;
+  }
+});
+document.addEventListener('pointerleave', ()=>{ tooltip.hidden = true; });
+
+/* ---------------- init ---------------- */
+render();
+})();
+</script>

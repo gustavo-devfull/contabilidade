@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Patrimônio &amp; Dívidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -100,7 +105,25 @@ body{
 .savebox .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background .2s;}
 .savebox[data-state="saved"] .dot{background:var(--good);}
 .savebox[data-state="saving"] .dot{background:var(--gold);animation:pulse 1s infinite;}
-.savebox[data-state="error"] .dot,.savebox[data-state="local"] .dot{background:var(--critical);}
+.savebox[data-state="error"] .dot{background:var(--critical);}
+.userbox{display:flex;align-items:center;gap:12px;}
+.userbox .email{font-size:12px;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
+.logout-btn{border:none;background:none;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:2px 0;}
+.logout-btn:hover{color:var(--critical);}
+[hidden]{display:none!important;}
+.auth-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;}
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px 28px;box-shadow:var(--shadow);}
+.auth-card h1{font-family:"Fraunces",serif;font-size:22px;font-weight:600;margin:0 0 4px;}
+.auth-card p.sub{color:var(--muted);font-size:13px;margin:0 0 22px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.field input{width:100%;border:1px solid var(--border);background:var(--bg);color:var(--ink);font:inherit;font-size:14px;padding:10px 12px;border-radius:9px;box-sizing:border-box;}
+.field input:focus{outline:none;border-color:var(--accent);}
+.auth-error{color:var(--critical);font-size:12.5px;margin:2px 0 14px;min-height:1em;}
+.auth-actions button{width:100%;}
+.auth-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:18px;}
+.auth-toggle button{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 /* ---------- hero ---------- */
@@ -190,10 +213,42 @@ footer.note{margin-top:28px;font-size:12px;color:var(--muted);text-align:center;
   .card{padding:16px;}
 }
 </style>
-<div class="app">
+</head>
+<body>
+<div class="auth-loading" id="auth-loading">Carregando…</div>
+
+<div class="auth-screen" id="auth-screen" hidden>
+  <div class="auth-card">
+    <h1 id="auth-title">Entrar</h1>
+    <p class="sub" id="auth-sub">Acesse seu painel de patrimônio e dívidas.</p>
+    <form id="auth-form">
+      <div class="field">
+        <label for="auth-email">E-mail</label>
+        <input id="auth-email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="auth-password">Senha</label>
+        <input id="auth-password" type="password" autocomplete="current-password" required minlength="6">
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+      <div class="auth-actions">
+        <button class="btn primary" type="submit" id="auth-submit">Entrar</button>
+      </div>
+    </form>
+    <div class="auth-toggle">
+      <span id="auth-toggle-text">Não tem conta?</span> <button type="button" id="auth-toggle-btn">Criar conta</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app-shell" hidden>
   <div class="topbar">
     <h1>Patrimônio &amp; Dívidas</h1>
-    <div class="savebox" id="savebox" data-state="saved"><span class="dot"></span><span id="savebox-text">Salvo</span></div>
+    <div class="userbox">
+      <span class="email" id="user-email"></span>
+      <button class="logout-btn" id="logout-btn" type="button">Sair</button>
+      <div class="savebox" id="savebox" data-state="saved"><span class="dot"></span><span id="savebox-text">Salvo</span></div>
+    </div>
   </div>
 
   <section class="hero" id="hero"></section>
@@ -212,25 +267,14 @@ footer.note{margin-top:28px;font-size:12px;color:var(--muted);text-align:center;
 <script>
 (function(){
 "use strict";
-const SELF_SCRIPT_SOURCE = document.currentScript.textContent;
-const PAGE_TITLE = "Patrimônio & Dívidas";
-const FONT_LINKS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">';
 
 /* ---------------- state ---------------- */
-const seedEl = document.getElementById('state-data');
-let state = JSON.parse(seedEl.textContent);
-if(!state.meta) state.meta = {savedAt:null, ui:{tab:'patrimonio'}};
-if(!state.meta.ui) state.meta.ui = {tab:'resumo'};
-
-try{
-  const raw = localStorage.getItem('patrimonio-dashboard-state-v1');
-  if(raw){
-    const local = JSON.parse(raw);
-    const localTs = local && local.meta && local.meta.savedAt;
-    const seedTs = state.meta.savedAt;
-    if(localTs && (!seedTs || localTs > seedTs)) state = local;
-  }
-}catch(e){}
+let state = null;
+function defaultState(){
+  const s = JSON.parse(document.getElementById('state-data').textContent);
+  s.meta = {savedAt:null, ui:{tab:'resumo'}};
+  return s;
+}
 
 const SERIES_VARS = ['--s-1','--s-2','--s-3','--s-4','--s-5','--s-6'];
 function seriesColor(i){ return `var(${SERIES_VARS[i % SERIES_VARS.length]})`; }
@@ -648,85 +692,130 @@ function refreshComputed(){
   }
 }
 
-/* ---------------- persistence ---------------- */
-let artifactCap = null;
-let capResolved = false;
-if(typeof window.claude !== 'undefined' && typeof window.claude.use === 'function'){
-  window.claude.use('artifact').then(cap=>{ artifactCap = cap; capResolved = true; }).catch(()=>{ capResolved = true; });
-} else { capResolved = true; }
-
-function saveLocal(){ try{ localStorage.setItem('patrimonio-dashboard-state-v1', JSON.stringify(state)); }catch(e){} }
-
-function buildFullDocument(st){
-  return `<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${PAGE_TITLE}</title>
-${FONT_LINKS}
-<style>${document.querySelector('style').textContent}</style>
-</head>
-<body>
-<div class="app">
-  <div class="topbar">
-    <h1>Patrimônio &amp; Dívidas</h1>
-    <div class="savebox" id="savebox" data-state="saved"><span class="dot"></span><span id="savebox-text">Salvo</span></div>
-  </div>
-  <section class="hero" id="hero"></section>
-  <nav class="tabs">
-    <button class="tab" data-tab="resumo">Início</button>
-    <button class="tab" data-tab="patrimonio">Patrimônio</button>
-    <button class="tab" data-tab="dividas">Dívidas</button>
-  </nav>
-  <main id="app"></main>
-  <footer class="note">Dados originados da planilha "Patrimônio e dívidas". Edite valores, datas e nomes diretamente nas tabelas — as alterações são salvas automaticamente.</footer>
-</div>
-<script id="state-data" type="application/json">${JSON.stringify(st)}<\/script>
-<script>${SELF_SCRIPT_SOURCE}<\/script>
-</body>
-</html>`;
-}
-
+/* ---------------- firebase auth + firestore persistence ---------------- */
+let fbAuth = null, fbDb = null, fbAuthMod = null, fbFsMod = null, currentUser = null;
 let saveTimer = null;
+
 function setSaveState(mode){
   const box = document.getElementById('savebox');
   const txt = document.getElementById('savebox-text');
   if(!box) return;
   box.dataset.state = mode;
-  txt.textContent = mode==='saving' ? 'Salvando…' : mode==='saved' ? 'Salvo' : mode==='local' ? 'Salvo neste navegador' : 'Erro ao salvar';
+  txt.textContent = mode==='saving' ? 'Salvando…' : mode==='saved' ? 'Salvo' : 'Erro ao salvar';
 }
 function scheduleSave(){
+  if(!currentUser) return;
   setSaveState('saving');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(doSave, 900);
 }
 async function doSave(){
+  if(!currentUser) return;
   state.meta.savedAt = new Date().toISOString();
-  if(artifactCap){
-    try{
-      await artifactCap.publish(buildFullDocument(state));
-      return; /* view reloads on success */
-    }catch(err){
-      const code = err && err.code;
-      if(code==='conflict') return;
-      if(code==='not_writer' || code==='not_granted' || code==='capability_disabled' || code==='not_declared'){
-        artifactCap = null;
-        saveLocal();
-        setSaveState('local');
-        return;
-      }
-      saveLocal();
-      setSaveState('error');
-      return;
-    }
+  try{
+    await fbFsMod.setDoc(fbFsMod.doc(fbDb, 'dashboards', currentUser.uid), state);
+    setSaveState('saved');
+  }catch(e){
+    setSaveState('error');
   }
-  saveLocal();
-  setSaveState(capResolved ? 'local' : 'saved');
 }
+
+async function loadState(){
+  try{
+    const ref = fbFsMod.doc(fbDb, 'dashboards', currentUser.uid);
+    const snap = await fbFsMod.getDoc(ref);
+    if(snap.exists()){
+      state = snap.data();
+    } else {
+      state = defaultState();
+      await fbFsMod.setDoc(ref, state);
+    }
+  }catch(e){
+    state = defaultState();
+  }
+  if(!state.meta) state.meta = {savedAt:null, ui:{tab:'resumo'}};
+  if(!state.meta.ui) state.meta.ui = {tab:'resumo'};
+}
+
+const AUTH_ERROR_MESSAGES = {
+  'auth/invalid-email':'E-mail inválido.',
+  'auth/user-not-found':'Usuário não encontrado.',
+  'auth/wrong-password':'Senha incorreta.',
+  'auth/invalid-credential':'E-mail ou senha incorretos.',
+  'auth/email-already-in-use':'Este e-mail já está cadastrado.',
+  'auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+  'auth/too-many-requests':'Muitas tentativas. Tente novamente em instantes.',
+  'auth/network-request-failed':'Falha de conexão. Tente novamente.',
+};
+function authErrorMessage(code){ return AUTH_ERROR_MESSAGES[code] || 'Não foi possível concluir. Tente novamente.'; }
+
+let authMode = 'login';
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById('auth-title').textContent = mode==='login' ? 'Entrar' : 'Criar conta';
+  document.getElementById('auth-submit').textContent = mode==='login' ? 'Entrar' : 'Criar conta';
+  document.getElementById('auth-toggle-text').textContent = mode==='login' ? 'Não tem conta?' : 'Já tem conta?';
+  document.getElementById('auth-toggle-btn').textContent = mode==='login' ? 'Criar conta' : 'Entrar';
+  document.getElementById('auth-error').textContent = '';
+}
+
+async function onAuthChanged(user){
+  currentUser = user;
+  document.getElementById('auth-loading').hidden = true;
+  if(user){
+    document.getElementById('auth-screen').hidden = true;
+    document.getElementById('app-shell').hidden = false;
+    document.getElementById('user-email').textContent = user.email || '';
+    await loadState();
+    render();
+  } else {
+    state = null;
+    document.getElementById('app-shell').hidden = true;
+    document.getElementById('auth-screen').hidden = false;
+  }
+}
+
+async function initFirebase(){
+  try{
+    const [appMod, authMod, fsMod, cfg] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),
+      fetch('/api/config').then(r=>r.json()),
+    ]);
+    fbAuthMod = authMod; fbFsMod = fsMod;
+    const fbApp = appMod.initializeApp(cfg);
+    fbAuth = authMod.getAuth(fbApp);
+    fbDb = fsMod.getFirestore(fbApp);
+    authMod.onAuthStateChanged(fbAuth, onAuthChanged);
+  }catch(e){
+    document.getElementById('auth-loading').textContent = 'Não foi possível conectar ao servidor. Recarregue a página.';
+  }
+}
+
+document.getElementById('auth-toggle-btn').addEventListener('click', ()=> setAuthMode(authMode==='login' ? 'signup' : 'login'));
+document.getElementById('auth-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-submit');
+  errEl.textContent = '';
+  btn.disabled = true;
+  try{
+    if(authMode==='login') await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, password);
+    else await fbAuthMod.createUserWithEmailAndPassword(fbAuth, email, password);
+  }catch(err){
+    errEl.textContent = authErrorMessage(err && err.code);
+  }finally{
+    btn.disabled = false;
+  }
+});
+document.getElementById('logout-btn').addEventListener('click', ()=>{ if(fbAuthMod) fbAuthMod.signOut(fbAuth); });
 
 /* ---------------- events ---------------- */
 function onTabClick(e){
+  if(!state) return;
   const btn = e.target.closest('.tab');
   if(!btn) return;
   state.meta.ui.tab = btn.dataset.tab;
@@ -734,6 +823,7 @@ function onTabClick(e){
 }
 
 function onInput(e){
+  if(!state) return;
   const t = e.target;
   const action = t.dataset.action;
   if(!action) return;
@@ -757,6 +847,7 @@ function onInput(e){
 }
 
 function onClick(e){
+  if(!state) return;
   const btn = e.target.closest('[data-action]');
   if(!btn || btn.tagName!=='BUTTON') return;
   const action = btn.dataset.action;
@@ -822,6 +913,8 @@ document.addEventListener('pointermove', e=>{
 document.addEventListener('pointerleave', ()=>{ tooltip.hidden = true; });
 
 /* ---------------- init ---------------- */
-render();
+initFirebase();
 })();
 </script>
+</body>
+</html>

@@ -775,16 +775,24 @@ async function onAuthChanged(user){
   }
 }
 
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCV6o0z8Fc5LjBZawNvqkHJnoUJzZ4avXo",
+  authDomain: "contabilidade-g.firebaseapp.com",
+  projectId: "contabilidade-g",
+  storageBucket: "contabilidade-g.firebasestorage.app",
+  messagingSenderId: "561916391206",
+  appId: "1:561916391206:web:042ab85772bfa49b609be7",
+};
+
 async function initFirebase(){
   try{
-    const [appMod, authMod, fsMod, cfg] = await Promise.all([
+    const [appMod, authMod, fsMod] = await Promise.all([
       import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
       import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'),
       import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),
-      fetch('/api/config').then(r=>r.json()),
     ]);
     fbAuthMod = authMod; fbFsMod = fsMod;
-    const fbApp = appMod.initializeApp(cfg);
+    const fbApp = appMod.initializeApp(FIREBASE_CONFIG);
     fbAuth = authMod.getAuth(fbApp);
     fbDb = fsMod.getFirestore(fbApp);
     authMod.onAuthStateChanged(fbAuth, onAuthChanged);

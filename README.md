@@ -18,39 +18,21 @@ entra (ver "Login e dados" abaixo).
 
 ## Deploy no Vercel
 
-Não há build step: o Vercel serve `index.html` como site estático e
-`api/config.js` como função serverless. Basta importar este repositório em
-vercel.com/new (framework preset "Other") ou rodar `vercel --prod` na raiz
-do projeto.
+Não há build step: o Vercel só precisa servir `index.html` como site
+estático. Basta importar este repositório em vercel.com/new (framework
+preset "Other") ou rodar `vercel --prod` na raiz do projeto.
 
 ## Login e dados (Firebase)
 
 A tela de login usa **Firebase Authentication** (e-mail/senha) e os dados de
 cada conta são salvos no **Cloud Firestore**, no documento
-`dashboards/{uid}` do usuário logado. `api/config.js` lê as credenciais do
-projeto Firebase das variáveis de ambiente do Vercel (nunca ficam no
-repositório) e as expõe ao navegador em `/api/config`.
+`dashboards/{uid}` do usuário logado. A config do SDK Web do Firebase
+(`FIREBASE_CONFIG` em `index.html`) fica direto no código — essas chaves não
+são secretas, a segurança vem das regras do Firestore abaixo, não de
+escondê-las.
 
-### 1. Variáveis de ambiente no Vercel
-
-Em **Project Settings → Environment Variables** do projeto `contabilidade`,
-adicione (Production + Preview):
-
-| Nome | Valor |
-|---|---|
-| `FIREBASE_API_KEY` | `AIzaSyCV6o0z8Fc5LjBZawNvqkHJnoUJzZ4avXo` |
-| `FIREBASE_AUTH_DOMAIN` | `contabilidade-g.firebaseapp.com` |
-| `FIREBASE_PROJECT_ID` | `contabilidade-g` |
-| `FIREBASE_STORAGE_BUCKET` | `contabilidade-g.firebasestorage.app` |
-| `FIREBASE_MESSAGING_SENDER_ID` | `561916391206` |
-| `FIREBASE_APP_ID` | `1:561916391206:web:042ab85772bfa49b609be7` |
-
-(Essas chaves do SDK Web do Firebase não são secretas — a segurança vem das
-regras do Firestore abaixo — mas ficam em env vars para não hardcodear
-config específica de ambiente no código.) Depois de salvar, faça um
-redeploy para elas entrarem em vigor.
-
-### 2. No console do Firebase (console.firebase.google.com → projeto `contabilidade-g`)
+No console do Firebase (console.firebase.google.com → projeto
+`contabilidade-g`):
 
 1. **Authentication → Sign-in method** → ative **E-mail/senha**.
 2. **Firestore Database** → crie o banco (modo produção).
